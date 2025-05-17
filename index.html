@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NURMUKHAMMAD.AIRLINES</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #1e2a47, #3551b5); /* Новый фон */
+      color: white;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      text-align: center;
+    }
+
+    .container {
+      background: rgba(0, 0, 0, 0.8);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+      max-width: 700px;
+      width: 100%;
+      animation: fadeIn 1s ease-out;
+    }
+
+    h1 {
+      color: #FFD700;
+      font-size: 3em; /* Имя теперь среднего размера */
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 5px;
+      font-weight: bold;
+      text-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+      animation: glow 1.5s infinite alternate;
+    }
+
+    h2 {
+      color: #FFD700;
+      font-size: 2em;
+      margin-bottom: 20px;
+      letter-spacing: 3px;
+    }
+
+    input, select {
+      padding: 15px;
+      margin: 15px 0;
+      font-size: 18px;
+      border-radius: 12px;
+      border: 2px solid transparent;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      width: 90%;
+      transition: all 0.3s ease;
+    }
+
+    input:focus, select:focus {
+      border-color: #FFD700;
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+      outline: none;
+    }
+
+    button {
+      background: linear-gradient(45deg, #FFD700, #FFA500);
+      color: #1a1a1a;
+      padding: 15px 30px;
+      margin: 20px 0;
+      font-size: 18px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    button:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+    }
+
+    #map {
+      height: 400px;
+      margin: 20px 0;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+      transition: all 0.3s ease;
+    }
+
+    #map:hover {
+      box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+    }
+
+    #message {
+      margin: 20px 0;
+      font-size: 22px;
+      color: #90EE90;
+      padding: 15px;
+      border-radius: 10px;
+      background: rgba(144, 238, 144, 0.1);
+      animation: slideIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes glow {
+      from { text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+      to { text-shadow: 0 0 20px rgba(255, 215, 0, 0.8), 0 0 30px rgba(255, 215, 0, 0.6); }
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(-100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    #price {
+      margin: 20px 0;
+      font-size: 24px;
+      color: #90EE90;
+      text-shadow: 0 0 10px rgba(144, 238, 144, 0.5);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+  </style>
+</head>
+<body>
+  <!-- Шаг 1: Ввод имени и выбор страны/города -->
+  <div class="container" id="step1">
+    <h1>NURMUKHAMMAD.AIRLINES</h1> <!-- Имя на английском и среднего размера -->
+    <p>Введите ваше имя:</p>
+    <input type="text" id="username" placeholder="Ваше имя"/>
+    <br/>
+    <p>Выберите страну:</p>
+    <select id="countrySelect" onchange="updateCities()">
+      <option value="uzbekistan">Узбекистан</option>
+      <option value="russia">Россия</option>
+      <option value="kazakhstan">Казахстан</option>
+      <option value="usa">США</option>
+      <option value="china">Китай</option>
+      <option value="india">Индия</option>
+      <option value="uk">Великобритания</option>
+      <option value="france">Франция</option>
+      <option value="brazil">Бразилия</option>
+      <option value="turkey">Турция</option>
+    </select>
+    <br/>
+    <p>Выберите город:</p>
+    <select id="citySelect">
+      <option value="tashkent">Ташкент</option>
+    </select>
+    <br/>
+    <button onclick="goToMap()">Далее</button>
+  </div>
+
+  <!-- Шаг 2: Выбор точки на карте -->
+  <div class="container" id="step2" style="display:none;">
+    <h2>Выберите точку на карте</h2>
+    <div id="map"></div>
+    <p id="coords"></p>
+    <div id="price"></div>
+    <button onclick="bookTicket()">Забронировать билет</button>
+    <div id="message"></div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    let map, marker;
+    let userCoords = {
+      uzbekistan: { tashkent: [41.2995, 69.2401] },
+      russia: { moscow: [55.7558, 37.6173] },
+      kazakhstan: { almaty: [43.2220, 76.8512] },
+      usa: { new_york: [40.7128, -74.0060] },
+      china: { beijing: [39.9042, 116.4074] },
+      india: { delhi: [28.6139, 77.2090] },
+      uk: { london: [51.5074, -0.1278] },
+      france: { paris: [48.8566, 2.3522] },
+      brazil: { rio_de_janeiro: [-22.9068, -43.1729] },
+      turkey: { istanbul: [41.0082, 28.9784] }
+    };
+    let destination = null;
+
+    // Обновление списка городов на основе выбранной страны
+    function updateCities() {
+      const country = document.getElementById("countrySelect").value;
+      const cities = Object.keys(userCoords[country]);
+      const citySelect = document.getElementById("citySelect");
+      citySelect.innerHTML = cities.map(city => `<option value="${city}">${city.charAt(0).toUpperCase() + city.slice(1).replace(/_/g, ' ')}</option>`).join('');
+      citySelect.value = cities[0];
+    }
+
+    // Переход к карте после ввода имени
+    function goToMap() {
+      const name = document.getElementById("username").value;
+      if (!name.trim()) {
+        alert("Введите имя!");
+        return;
+      }
+
+      const country = document.getElementById("countrySelect").value;
+      const city = document.getElementById("citySelect").value;
+      userCoords = userCoords[country][city];
+
+      document.getElementById("step1").style.display = "none";
+      document.getElementById("step2").style.display = "block";
+
+      // Инициализация карты
+      map = L.map('map').setView(userCoords, 12);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
+
+      // Маркер для текущего местоположения
+      L.marker(userCoords).addTo(map).bindPopup("Вы").openPopup();
+
+      // Обработчик клика на карте
+      map.on('click', function(e) {
+        destination = e.latlng;
+
+        if (marker) marker.remove();
+        marker = L.marker(destination).addTo(map).bindPopup("Точка назначения").openPopup();
+
+        document.getElementById("coords").innerText = 
+          `Выбрано: ${destination.lat.toFixed(5)}, ${destination.lng.toFixed(5)}`;
+
+        updatePrice();
+      });
+    }
+
+    // Обновление стоимости билета
+    function updatePrice() {
+      if (!destination) return;
+      const km = calculateDistance(userCoords, destination);
+      const price = km * 1000; // Стоимость за 100 метров 100 000 сум
+      document.getElementById("price").innerText = `Цена билета: ${Math.round(price)} сум`;
+    }
+
+    // Расчет расстояния между двумя точками
+    function calculateDistance(coord1, coord2) {
+      const R = 6371; // Радиус Земли в км
+      const dLat = (coord2.lat - coord1[0]) * Math.PI / 180;
+      const dLon = (coord2.lng - coord1[1]) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(coord1[0] * Math.PI / 180) * Math.cos(coord2.lat * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c * 1000; // расстояние в метрах
+    }
+
+    // Оформление бронирования
+    function bookTicket() {
+      if (!destination) {
+        alert("Сначала выберите точку на карте.");
+        return;
+      }
+      document.getElementById("message").innerText =
+        "Билет забронирован! Самолет отправится через 3 дня. Платеж наличными при получении.";
+    }
+  </script>
+</body>
+</html>
+
+
